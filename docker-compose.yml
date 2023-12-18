@@ -1,0 +1,45 @@
+version: '3'
+services:
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+  postgres:
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: mobelaris
+      POSTGRES_PASSWORD: example_password
+
+  geoipnginx:
+    build: ./geoipnginx
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./certbot/www/:/var/www/certbot/:ro
+      - ./geoipnginx/conf/:/etc/nginx/conf.d/:ro
+      - ./certbot/conf/:/etc/nginx/ssl/:ro
+    networks:
+      your_network_name:
+        ipv4_address: 172.19.0.10  # Use the desired fixed IP address
+  certbot:
+    image: certbot/certbot:latest
+    container_name: certbot
+    volumes:
+      - ./certbot/www/:/var/www/certbot/:rw
+      - ./certbot/conf/:/etc/letsencrypt/:rw
+    #command: certonly --webroot -w /var/www/certbot --force-renewal --email thethi.thichthat@gmail.com -d testgeoip.hieunguyen.dev  --agree-tos
+
+volumes:
+  postgres-data:
+  meilisearch-data:
+
+networks:
+  your_network_name:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.19.0.0/16
